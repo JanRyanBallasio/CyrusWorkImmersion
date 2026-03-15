@@ -1,0 +1,114 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f6f4ef;
+  --foreground: #090909;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-strong: #ffffff;
+  --muted: #6f6f6f;
+  --line: rgba(9, 9, 9, 0.14);
+  --line-strong: rgba(9, 9, 9, 0.88);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.08);
+  --radius: 1.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-bebas);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(0, 0, 0, 0.06), transparent 28%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.58));
+  min-height: 100vh;
+}
+
+.dark {
+  --background: #050505;
+  --foreground: #f5f1e8;
+  --surface: rgba(17, 17, 17, 0.84);
+  --surface-strong: #0d0d0d;
+  --muted: #acacac;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.82);
+  --shadow: 0 24px 100px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  border-color: var(--line);
+}
+
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.display-face {
+  font-family: var(--font-bebas), Impact, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.editorial-grid {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%;
+  background-position: center;
+}
+
+.mechanic-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 40%),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.06), transparent 50%),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.dark .mechanic-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 50%),
+    var(--surface);
+}
+
+.metal-line {
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+.grain-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.5), transparent 26%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.28), transparent 18%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.2), transparent 22%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
