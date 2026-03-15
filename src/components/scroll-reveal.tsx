@@ -37,7 +37,22 @@ export function ScrollReveal({
   const [visible, setVisible] = React.useState(false);
   const [offsetY, setOffsetY] = React.useState(0);
   const [hasScrolled, setHasScrolled] = React.useState(false);
-  const debugId = React.useId();
+  const [isCompactViewport, setIsCompactViewport] = React.useState(false);
+  const resolvedDistance = isCompactViewport ? Math.min(distance, 28) : distance;
+  const resolvedParallax = isCompactViewport ? Math.min(parallax, 8) : parallax;
+  const resolvedDelay = isCompactViewport ? Math.min(delay, 120) : delay;
+  const resolvedDuration = isCompactViewport ? 420 : 900;
+  const compactVariant =
+    isCompactViewport && (variant === "left" || variant === "right") ? "up" : variant;
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 640px)");
+    const updateViewport = () => setIsCompactViewport(mediaQuery.matches);
+
+    updateViewport();
+    mediaQuery.addEventListener("change", updateViewport);
+    return () => mediaQuery.removeEventListener("change", updateViewport);
+  }, []);
 
   React.useEffect(() => {
     if (!requireScroll) {
@@ -46,23 +61,13 @@ export function ScrollReveal({
     }
 
     const initialScrollY = window.scrollY;
-    const unlockDistance = 48;
-    console.log("[ScrollReveal]", debugId, "requireScroll enabled", {
-      initialScrollY,
-      unlockDistance,
-    });
+    const unlockDistance = isCompactViewport ? 18 : 48;
 
     const onScroll = () => {
-      console.log("[ScrollReveal]", debugId, "scroll check", {
-        currentScrollY: window.scrollY,
-        delta: Math.abs(window.scrollY - initialScrollY),
-      });
-
       if (Math.abs(window.scrollY - initialScrollY) < unlockDistance) {
         return;
       }
 
-      console.log("[ScrollReveal]", debugId, "scroll unlocked");
       setHasScrolled(true);
       cleanup();
     };
@@ -89,7 +94,7 @@ export function ScrollReveal({
     return () => {
       cleanup();
     };
-  }, [debugId, requireScroll]);
+  }, [isCompactViewport, requireScroll]);
 
   React.useEffect(() => {
     const node = ref.current;
@@ -101,17 +106,10 @@ export function ScrollReveal({
         frame = 0;
         const rect = node.getBoundingClientRect();
         const viewportHeight = window.innerHeight || 1;
-        const triggerPoint = viewportHeight * sceneStart;
-        console.log("[ScrollReveal]", debugId, "scene check", {
-          top: rect.top,
-          bottom: rect.bottom,
-          triggerPoint,
-          hasScrolled,
-          visible,
-        });
+        const compactSceneStart = isCompactViewport ? Math.min(sceneStart, 0.92) : sceneStart;
+        const triggerPoint = viewportHeight * compactSceneStart;
 
         if (hasScrolled && rect.top <= triggerPoint) {
-          console.log("[ScrollReveal]", debugId, "scene revealed");
           setVisible(true);
         }
       };
@@ -134,14 +132,7 @@ export function ScrollReveal({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        console.log("[ScrollReveal]", debugId, "intersection check", {
-          isIntersecting: entry.isIntersecting,
-          intersectionRatio: entry.intersectionRatio,
-          top: entry.boundingClientRect.top,
-          bottom: entry.boundingClientRect.bottom,
-        });
         if (entry.isIntersecting) {
-          console.log("[ScrollReveal]", debugId, "intersection revealed");
           setVisible(true);
           observer.disconnect();
         }
@@ -150,14 +141,8 @@ export function ScrollReveal({
     );
 
     observer.observe(node);
-    console.log("[ScrollReveal]", debugId, "observer attached", {
-      threshold,
-      rootMargin,
-      scene,
-      sceneStart,
-    });
     return () => observer.disconnect();
-  }, [debugId, hasScrolled, rootMargin, scene, sceneStart, threshold, visible]);
+  }, [hasScrolled, isCompactViewport, rootMargin, scene, sceneStart, threshold, visible]);
 
   React.useEffect(() => {
     const node = ref.current;
@@ -171,7 +156,7 @@ export function ScrollReveal({
       const viewportHeight = window.innerHeight || 1;
       const progress = (rect.top + rect.height * 0.5) / viewportHeight;
       const centered = progress - 0.5;
-      setOffsetY(centered * parallax * -1);
+      setOffsetY(centered * resolvedParallax * -1);
     };
 
     const onScroll = () => {
@@ -188,14 +173,14 @@ export function ScrollReveal({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [parallax]);
+  }, [resolvedParallax]);
 
   const hiddenTransform = {
-    up: { x: 0, y: distance, scale: 1 },
-    left: { x: distance * -1, y: 0, scale: 1 },
-    right: { x: distance, y: 0, scale: 1 },
-    zoom: { x: 0, y: Math.round(distance * 0.6), scale: 0.96 },
-  }[variant];
+    up: { x: 0, y: resolvedDistance, scale: 1 },
+    left: { x: resolvedDistance * -1, y: 0, scale: 1 },
+    right: { x: resolvedDistance, y: 0, scale: 1 },
+    zoom: { x: 0, y: Math.round(resolvedDistance * 0.6), scale: 0.98 },
+  }[compactVariant];
 
   const transform = visible
     ? `translate3d(0, ${offsetY}px, 0) scale(1)`
@@ -205,12 +190,13 @@ export function ScrollReveal({
     <div
       ref={ref}
       className={cn(
-        "transition-[transform,opacity,filter] duration-900 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+        "transition-[transform,opacity,filter] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
         visible ? "opacity-100" : "opacity-0",
         className,
       )}
       style={{
-        transitionDelay: `${delay}ms`,
+        transitionDelay: `${resolvedDelay}ms`,
+        transitionDuration: `${resolvedDuration}ms`,
         transform,
         filter: visible ? "blur(0px)" : `blur(${blur}px)`,
       }}
